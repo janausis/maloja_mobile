@@ -3,8 +3,8 @@ import 'dart:convert';
 
 import 'package:maloja_mobile/services/setup_service.dart';
 
-class ArtistService {
-  Future<List<Artist>> fetchArtists(String s) async {
+class AlbumService {
+  Future<List<Album>> fetchAlbums(String s) async {
     try {
       String baseUrl = await ServerService().getServerUrl();
       String filter = "?in=today";
@@ -23,53 +23,48 @@ class ArtistService {
           break;
       }
 
-      final response = await http.get(Uri.parse('$baseUrl/apis/mlj_1/charts/artists$filter'));
+      final response = await http.get(Uri.parse('$baseUrl/apis/mlj_1/charts/albums$filter'));
 
       if (response.statusCode == 200) {
         final jsonBody = json.decode(response.body);
 
         if (jsonBody['status'] == 'ok' && jsonBody['list'] is List) {
-          final List<dynamic> artistList = jsonBody['list'];
-          return artistList.map((artistData) => Artist.fromJson(artistData)).toList();
+          final List<dynamic> albumList = jsonBody['list'];
+          return albumList.map((albumData) => Album.fromJson(albumData)).toList();
         } else {
           throw Exception('Invalid response structure');
         }
       } else {
-        throw Exception('Failed to load artists: ${response.statusCode}');
+        throw Exception('Failed to load albums: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Error fetching artists: $e');
+      throw Exception('Error fetching albums: $e');
     }
   }
 }
 
-
-class Artist {
+class Album {
   final int id;
   final int rank;
-  final String name;
+  final String albumTitle;
   final int scrobbles;
-  final int realScrobbles;
-  final List<String> associatedArtists;
+  final List<String> artists;
 
-  Artist({
+  Album({
     required this.id,
     required this.rank,
-    required this.name,
+    required this.albumTitle,
     required this.scrobbles,
-    required this.realScrobbles,
-    required this.associatedArtists
+    required this.artists,
   });
 
-  factory Artist.fromJson(Map<String, dynamic> json) {
-    return Artist(
-      id: json['artist_id'] as int,
+  factory Album.fromJson(Map<String, dynamic> json) {
+    return Album(
+      id: json['album_id'] as int,
       rank: json['rank'] as int,
-      name: json['artist'] as String,
+      albumTitle: json['album']['albumtitle'] as String,
       scrobbles: json['scrobbles'] as int,
-      realScrobbles: json['real_scrobbles'] as int,
-      associatedArtists: List<String>.from(json['associated_artists']),
+      artists: List<String>.from(json['album']['artists']),
     );
   }
-
 }

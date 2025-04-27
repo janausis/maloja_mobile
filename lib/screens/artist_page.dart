@@ -21,13 +21,30 @@ class _ArtistPageState extends State<ArtistPage> {
     _loadArtists();
   }
 
+  // Track the selected index for the BottomNavigationBar
+  int _selectedIndex = 0;
+
+  // List of pages to navigate between
+  final List<String> _pages = ["today", "week", "month", "year", "total"];
+
   Future<void> _loadArtists() async {
     // Get the current list or an empty list if null
 
-    List<Artist> arts = await ArtistService().fetchArtists();
+    List<Artist> arts = await ArtistService().fetchArtists(
+      _pages[_selectedIndex],
+    );
     setState(() {
       artists = arts;
     });
+  }
+
+  // Function to update the selected tab and navigate to the corresponding page
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    _loadArtists();
   }
 
   @override
@@ -37,46 +54,92 @@ class _ArtistPageState extends State<ArtistPage> {
     return Scaffold(
       appBar: AppBar(title: Text('Top Artists')),
       body: SafeArea(
-        child:
+        child: Column(
+          children: [
+            // Show loading or the artists based on the state
             artists.isEmpty
                 ? Center(
                   child: CircularProgressIndicator(),
-                ) // Show loading indicator while fetching
-                : ListView.builder(
-                  itemCount: artists.length,
-                  itemBuilder: (innerContext, index) {
-                    bool isLastItem = index == artists.length;
-
-                    if (index == 0) {
-                      return BigArtistItem(artist: artists[index]);
-                    } else if (index == 1 && artists.length == 2) {
-                      return BigArtistItem(artist: artists[index]);
-                    } else if (index == 1) {
-                      return MediumArtistItem(
-                        artistLeft: artists[index],
-                        artistRight: artists[index + 1],
-                      );
-                    } else if (index == 2) {
-                      return SizedBox();
-                    } else {
-                      return Column(
-                        children: [
-                          SmallArtistItem(artist: artists[index], theme: theme),
-                          if (!isLastItem)
-                            Container(
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              height: 0.5,
-                              color:
-                                  CupertinoColors
-                                      .systemGrey4, // Nice soft grey line
+                ) // Show loading indicator
+                : Expanded(
+                  // Wrap the ListView.builder with Expanded to avoid overflow
+                  child: ListView.builder(
+                    itemCount: artists.length + 1,
+                    itemBuilder: (innerContext, index) {
+                      bool isLastItem = index == artists.length;
+                      if (index == 0) {
+                        return Padding(
+                          padding: EdgeInsets.symmetric(vertical: 0),
+                          child: Container(
+                            height: 60,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _pages.length,
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 10,
+                                  ),
+                                  child: ElevatedButton(
+                                    onPressed: () => _onItemTapped(index),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          _selectedIndex == index
+                                              ? theme.colorScheme.primary
+                                              : theme.colorScheme.secondaryContainer,
+                                    ),
+                                    child: Text(
+                                      _pages[index].toUpperCase(),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                        color:
+                                            _selectedIndex == index
+                                                ? theme.colorScheme.onPrimary
+                                                : theme.colorScheme.onSecondaryContainer,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                        ],
-                      );
-                    }
-                  },
+                          ),
+                        );
+                      } else if (index == 1) {
+                        return BigArtistItem(artist: artists[index - 1]);
+                      } else if (index == 2 && artists.length == 2) {
+                        return BigArtistItem(artist: artists[index - 1]);
+                      } else if (index == 2) {
+                        return MediumArtistItem(
+                          artistLeft: artists[index - 1],
+                          artistRight: artists[index],
+                        );
+                      } else if (index == 3) {
+                        return SizedBox();
+                      } else {
+                        return Column(
+                          children: [
+                            SmallArtistItem(
+                              artist: artists[index - 1],
+                              theme: theme,
+                            ),
+                            if (!isLastItem)
+                              Container(
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                height: 0.5,
+                                color: CupertinoColors.systemGrey4,
+                              ),
+                          ],
+                        );
+                      }
+                    },
+                  ),
                 ),
+          ],
+        ),
       ),
     );
   }
@@ -98,7 +161,7 @@ class BigArtistItem extends StatelessWidget {
               decoration: BoxDecoration(
                 boxShadow: [
                   BoxShadow(
-                    color: Color.fromARGB(150,0,0,0),
+                    color: Color.fromARGB(150, 0, 0, 0),
                     spreadRadius: 5,
                     blurRadius: 10,
                     offset: Offset(0, 2),
@@ -193,7 +256,7 @@ class MediumArtistItem extends StatelessWidget {
               decoration: BoxDecoration(
                 boxShadow: [
                   BoxShadow(
-                    color: Color.fromARGB(150,0,0,0),
+                    color: Color.fromARGB(150, 0, 0, 0),
                     spreadRadius: 3,
                     blurRadius: 10,
                     offset: Offset(0, 2),
@@ -256,7 +319,7 @@ class MediumArtistItem extends StatelessWidget {
               decoration: BoxDecoration(
                 boxShadow: [
                   BoxShadow(
-                    color: Color.fromARGB(150,0,0,0),
+                    color: Color.fromARGB(150, 0, 0, 0),
                     spreadRadius: 1,
                     blurRadius: 10,
                     offset: Offset(0, 2),
