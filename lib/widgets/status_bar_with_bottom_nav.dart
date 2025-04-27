@@ -4,10 +4,16 @@ import 'package:flutter/material.dart';
 
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:maloja_mobile/screens/album_page.dart';
+import 'package:maloja_mobile/screens/artist_page.dart';
+import 'package:maloja_mobile/screens/scrobble_page.dart';
+import 'package:maloja_mobile/screens/track_page.dart';
+import 'package:maloja_mobile/utils/page_router.dart';
+
+import '../screens/main_page.dart';
 
 class BottomNav extends StatefulWidget {
-  final Widget body;
-  const BottomNav({super.key, required this.body});
+  const BottomNav({super.key});
 
   @override
   State<BottomNav> createState() => _BottomNavState();
@@ -22,6 +28,24 @@ class _BottomNavState extends State<BottomNav> with TickerProviderStateMixin {
     _controller = AnimationController(vsync: this, duration: Duration(seconds: 5))..repeat();
   }
 
+  // Track the selected index for the BottomNavigationBar
+  int _selectedIndex = 0;
+
+  // List of pages to navigate between
+  final List<Widget> _pages = [
+    ArtistPage(),
+    TrackPage(),
+    AlbumPage(),
+    ScrobblePage(),
+  ];
+
+  // Function to update the selected tab and navigate to the corresponding page
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   void dispose() {
     _controller.dispose(); // Clean up the controller
@@ -33,7 +57,8 @@ class _BottomNavState extends State<BottomNav> with TickerProviderStateMixin {
     final theme = Theme.of(context);
 
     return Scaffold(
-      body: widget.body,
+      backgroundColor: Colors.white,
+      body: _selectedIndex == 0 ? MainPage() : _pages[_selectedIndex - 1],
       bottomNavigationBar: BottomAppBar(
         height: 70,
         shape: CircularNotchedRectangle(),
@@ -50,14 +75,14 @@ class _BottomNavState extends State<BottomNav> with TickerProviderStateMixin {
                 iconSize: 30,
                 icon: Icon(Icons.person, size: 30), // Replace with your own icon
                 onPressed: () {
-                  // Handle home press
+                  _onItemTapped(1);
                 },
               ),
               IconButton(
                 iconSize: 30,
                 icon: Icon(Icons.audiotrack, size: 30),
                 onPressed: () {
-                  // Handle search press
+                  _onItemTapped(2);
                 },
               ),
               Expanded(child: SizedBox()), // Empty space for the floating button (centered)
@@ -65,49 +90,53 @@ class _BottomNavState extends State<BottomNav> with TickerProviderStateMixin {
                 iconSize: 30,
                 icon: Icon(Icons.album, size: 30),
                 onPressed: () {
-                  // Handle notifications press
+                  _onItemTapped(3);
                 },
               ),
               IconButton(
                 iconSize: 30,
                 icon: Icon(Icons.library_music, size: 30),
                 onPressed: () {
-                  // Handle account press
+                  _onItemTapped(4);
                 },
               ),
             ],
           ),
         ),
       ),
-      floatingActionButton: AnimatedBuilder(
-        animation: _controller,
-        builder: (_, child) {
-          return Transform.rotate(
-            angle: _controller.value * 2 * math.pi,
-            child: child,
-          );
-        },
-        child: Container(
-          width: 60, // Adjust the size of the circle
-          height: 60, // Adjust the size of the circle
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: theme.colorScheme.secondaryContainer.withAlpha(100),
-            // Background color of the circle
-            boxShadow: [
-              BoxShadow(
-                color: theme.colorScheme.onSurface.withAlpha(0),
-                blurRadius: 6,
-                spreadRadius: 2,
-              ),
-            ],
-          ),
-          child: ClipOval(
-            child: Transform.scale(
-              scale: 1.1, // Increase this value to make the image larger
-              child: Image.asset(
-                'assets/favicon_large.png',
-                fit: BoxFit.cover, // Scale the image to cover the box
+      floatingActionButton: FloatingActionButton(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+        onPressed: () => _onItemTapped(0),
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (_, child) {
+            return Transform.rotate(
+              angle: _controller.value * 2 * math.pi,
+              child: child,
+            );
+          },
+          child: Container(
+            width: 60, // Adjust the size of the circle
+            height: 60, // Adjust the size of the circle
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: theme.colorScheme.secondaryContainer.withAlpha(100),
+              // Background color of the circle
+              boxShadow: [
+                BoxShadow(
+                  color: theme.colorScheme.onSurface.withAlpha(0),
+                  blurRadius: 6,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: ClipOval(
+              child: Transform.scale(
+                scale: 1.12, // Increase this value to make the image larger
+                child: Image.asset(
+                  'assets/favicon_large.png',
+                  fit: BoxFit.cover, // Scale the image to cover the box
+                ),
               ),
             ),
           ),

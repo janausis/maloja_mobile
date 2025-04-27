@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:maloja_mobile/screens/main_page.dart';
+import 'package:maloja_mobile/widgets/status_bar_with_bottom_nav.dart';
 import 'screens/setup_page.dart'; // Import the setup page
 
 void main() async {
@@ -50,7 +51,7 @@ class MyApp extends StatelessWidget {
           },
         ),
       ),
-      home: urls.isEmpty ? const SetupPage() : const MainPage(),
+      home: urls.isEmpty ? const SetupPage() : const BottomNav( ),
 
       debugShowCheckedModeBanner: false,
     );

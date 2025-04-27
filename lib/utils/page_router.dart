@@ -27,7 +27,35 @@ class NavigationUtil {
   static void pushReplacementPage(BuildContext context, Widget page) {
     if (defaultTargetPlatform == TargetPlatform.iOS) {
       // Use CupertinoPageRoute for iOS
-      Navigator.pushReplacement(
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          CupertinoPageRoute(
+            maintainState: true,
+            builder: (context) => page,
+          ),
+              (route) => false,
+        );
+      });
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
+      // Use MaterialPageRoute with a custom page transition on Android
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            maintainState: true,
+            builder: (context) => page,
+          ),
+              (route) => false,
+        );
+      });
+    }
+  }
+
+  static void pushPageBottomNav(BuildContext context, Widget page) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      // Use CupertinoPageRoute for iOS
+      Navigator.push(
         context,
         CupertinoPageRoute(
           builder: (context) => page,
@@ -35,7 +63,7 @@ class NavigationUtil {
       );
     } else if (defaultTargetPlatform == TargetPlatform.android) {
       // Use MaterialPageRoute with a custom page transition on Android
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => page,

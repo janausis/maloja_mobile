@@ -15,8 +15,7 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
-class _SettingsPageState extends State<SettingsPage>
-    with TickerProviderStateMixin {
+class _SettingsPageState extends State<SettingsPage> {
   late Box box;
   late List<String> urls = [];
   late String selected = "";
@@ -25,6 +24,11 @@ class _SettingsPageState extends State<SettingsPage>
   void initState() {
     super.initState();
     _loadUrls();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   Future<void> _loadUrls() async {
@@ -57,9 +61,11 @@ class _SettingsPageState extends State<SettingsPage>
 
   Future<void> _selectUrl(int index) async {
     setState(() {
+      if (!mounted) return;
       selected = urls[index];
     });
 
+    if (!mounted) return;
     // Save updated list to Hive
     await box.put('selectedUrl', urls[index]);
 

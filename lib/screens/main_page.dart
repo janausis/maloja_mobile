@@ -17,48 +17,29 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(
-    vsync: this,
-    duration: Duration(seconds: 5),
-  )..repeat();
-
-  @override
-  void dispose() {
-    _controller
-        .dispose(); // Clean up the controller when the widget is disposed
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return StatusBar(
-      child: BottomNav(
-        body: SafeArea(
-          child: Stack(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  spacing: 10,
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.dns), // Your settings icon
-                      onPressed: () {
-                        NavigationUtil.pushPage(
-                          context,
-                          SettingsPage(), // The page you want to navigate to
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ],
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Main Page'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.dns), // Your settings icon
+            onPressed: () {
+              // Navigate to SettingsPage when icon is pressed
+              NavigationUtil.pushPage(
+                context,
+                SettingsPage(), // The page you want to navigate to
+              );
+            },
           ),
-        ),
+        ],
+      ),
+      body: Center(
+        child: Text('Main Page Content'),
       ),
     );
   }
