@@ -1,7 +1,13 @@
 import 'dart:math' as math;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:maloja_mobile/screens/settings_page.dart';
 import 'package:maloja_mobile/widgets/status_bar.dart';
+import 'package:maloja_mobile/widgets/status_bar_with_bottom_nav.dart';
+import 'package:material_symbols_icons/symbols.dart';
+
+import '../utils/page_router.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -11,11 +17,15 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
-  late final AnimationController _controller = AnimationController(vsync: this, duration: Duration(seconds: 5))..repeat();
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: Duration(seconds: 5),
+  )..repeat();
 
   @override
   void dispose() {
-    _controller.dispose(); // Clean up the controller when the widget is disposed
+    _controller
+        .dispose(); // Clean up the controller when the widget is disposed
     super.dispose();
   }
 
@@ -24,75 +34,32 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
     final theme = Theme.of(context);
 
     return StatusBar(
-      child: Scaffold(
+      child: BottomNav(
         body: SafeArea(
           child: Stack(
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   spacing: 10,
                   children: [
-                    Text(
-                      'maloja',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
                     IconButton(
-                      icon: Icon(Icons.settings), // Your settings icon
+                      icon: Icon(Icons.dns), // Your settings icon
                       onPressed: () {
-                      // Handle settings icon tap
+                        NavigationUtil.pushPage(
+                          context,
+                          SettingsPage(), // The page you want to navigate to
+                        );
                       },
                     ),
                   ],
-                )
-              ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 10), // Adjust the bottom padding
-                  child: AnimatedBuilder(
-                    animation: _controller,
-                    builder: (_, child) {
-                      return Transform.rotate(
-                        angle: _controller.value * 2 * math.pi,
-                        child: child,
-                      );
-                    },
-                    child: Container(
-                      width: 60, // Adjust the size of the circle
-                      height: 60, // Adjust the size of the circle
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: Colors.black, // Background color of the circle
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(100),
-                            blurRadius: 6,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: ClipOval(
-                        child: Transform.scale(
-                          scale: 1.1, // Increase this value to make the image larger
-                          child: Image.asset(
-                            'assets/favicon_large.png',
-                            fit: BoxFit.cover, // Scale the image to cover the box
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
                 ),
               ),
             ],
-          )
-        )
-      )
+          ),
+        ),
+      ),
     );
   }
-
 }

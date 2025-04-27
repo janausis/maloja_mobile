@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 class StatusBar extends StatelessWidget {
   final Widget child;
 
+
   const StatusBar({super.key, required this.child});
 
   @override

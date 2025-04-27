@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import services package
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:maloja_mobile/widgets/app_snackbar.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../widgets/loading_button.dart';
 import '../services/setup_service.dart';
@@ -78,6 +79,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
         if (!urls.contains(input)) { // optional: avoid duplicates
           urls.add(input);
           await box.put('serverUrls', urls);
+          await box.put('selectedUrl', input);
         }
 
         if (!mounted) return;
@@ -102,40 +104,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
   }
 
   void _showError(String message) {
-    final controller = AnimationController(
-      duration: const Duration(seconds: 1),
-      vsync: this, // Use the TickerProvider from TickerProviderStateMixin
-    );
-
-    final animation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: controller, curve: Curves.easeOut),
-    );
-
-    controller.forward();
-
-    // Now use `ScaffoldMessenger.of(context)` directly inside the showError method.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content:
-          Text(message,
-              style:
-              TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  fontWeight: FontWeight.w500, // Set the font weight
-                  fontSize: 16.0
-              )
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          duration: const Duration(seconds: 3),
-          margin: const EdgeInsets.symmetric(horizontal: 40, vertical: 20), // Detached from sides
-          animation: animation,
-        ),
-      );
-    });
+    AppSnackBar(message: message).build(context);
   }
 
   @override
