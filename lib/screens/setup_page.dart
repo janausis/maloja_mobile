@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import services package
 import 'package:hive_flutter/hive_flutter.dart';
@@ -5,6 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 import '../widgets/loading_button.dart';
 import '../services/setup_service.dart';
+import '../widgets/status_bar.dart';
+import 'main_page.dart';
 
 class SetupPage extends StatefulWidget {
   const SetupPage({super.key});
@@ -64,14 +67,32 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
 
     try {
       final isValid = await ServerService().pingServer(testUri);
+      if (!mounted) return;
+
       if (isValid) {
         final box = await Hive.openBox('settings');
-        await box.put('serverUrl', input);
-        _showError('Server Valid');
+
+        // get current list or empty list if null
+        List<String> urls = box.get('serverUrls', defaultValue: [])!.cast<String>();
+
+        if (!urls.contains(input)) { // optional: avoid duplicates
+          urls.add(input);
+          await box.put('serverUrls', urls);
+        }
+
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          CupertinoPageRoute(
+            builder: (context) => const MainPage(),
+          ),
+        );
+
       } else {
+        if (!mounted) return;
         _showError('Server responded with invalid status');
       }
     } catch (e) {
+      if (!mounted) return;
       _showError(e.toString());
     } finally {
       setState(() {
@@ -123,64 +144,66 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
 
     _setStatusBar();
 
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              Expanded(
-                child: Column(
-                  children: [
-                    const Spacer(flex: 1),
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Image.asset(
-                          'assets/favicon_large.png',
-                          height: 200,
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'maloja',
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
+    return StatusBar(
+        child: Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              children: [
+                Expanded(
+                  child: Column(
+                    children: [
+                      const Spacer(flex: 1),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Image.asset(
+                            'assets/favicon_large.png',
+                            height: 200,
                           ),
-                        ),
-                        const SizedBox(height: 40),
-                        TextField(
-                          controller: _controller,
-                          textAlign: TextAlign.start,
-                          decoration: InputDecoration(
-                            hintText: 'Maloja Server Domain',
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(16),
+                          const SizedBox(height: 20),
+                          Text(
+                            'maloja',
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 24),
-                        LoadingButton(
-                          isLoading: _isLoading,
-                          onPressed: _isLoading ? null : _saveServerUrl,
-                        ),
-                      ],
-                    ),
-                    const Spacer(flex: 3),
-                  ],
-                ),
-              ),
-              if (_appVersion.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(
-                    _appVersion,
-                    style: theme.textTheme.bodySmall,
+                          const SizedBox(height: 40),
+                          TextField(
+                            controller: _controller,
+                            textAlign: TextAlign.start,
+                            decoration: InputDecoration(
+                              hintText: 'Maloja Server Domain',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          LoadingButton(
+                            isLoading: _isLoading,
+                            onPressed: _isLoading ? null : _saveServerUrl,
+                          ),
+                        ],
+                      ),
+                      const Spacer(flex: 3),
+                    ],
                   ),
                 ),
-            ],
+                if (_appVersion.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(
+                      _appVersion,
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
-      ),
+      )
     );
   }
 }

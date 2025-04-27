@@ -1,21 +1,32 @@
 // lib/main.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:maloja_mobile/screens/main_page.dart';
 import 'screens/setup_page.dart'; // Import the setup page
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
-  await Hive.openBox('settingsBox');
-  runApp(const MyApp());
+  final settingsBox = await Hive.openBox('settings');
+
+  List<String> urls = (settingsBox.get('serverUrls') as List?)?.cast<String>() ?? [];
+
+
+
+  runApp(MyApp(urls: urls));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final List<String> urls;
+
+  const MyApp({super.key, required this.urls});
+
 
   @override
   Widget build(BuildContext context) {
+
     return MaterialApp(
       title: 'Maloja',
       themeMode: ThemeMode.system,
@@ -27,7 +38,8 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent, brightness: Brightness.dark),
         useMaterial3: true,
       ),
-      home: const SetupPage(),
+      home: urls.isEmpty ? const SetupPage() : const MainPage(),
+
       debugShowCheckedModeBanner: false,
     );
   }
