@@ -1,6 +1,7 @@
 // lib/services/setup_service.dart
 
 import 'dart:convert';
+import 'package:hive_flutter/adapters.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 
@@ -29,5 +30,11 @@ class ServerService {
       // Catch and throw any other exceptions that occur during the request
       throw Exception('Server seems to be invalid!');
     }
+  }
+
+  Future<String> getServerUrl() async {
+    final box = await Hive.openBox('settings');
+    final selectedUrl = box.get('selectedUrl', defaultValue: '');
+    return selectedUrl;
   }
 }

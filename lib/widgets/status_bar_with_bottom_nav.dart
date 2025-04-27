@@ -25,7 +25,7 @@ class _BottomNavState extends State<BottomNav> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(vsync: this, duration: Duration(seconds: 5))..repeat();
+    _controller = AnimationController(vsync: this, duration: Duration(seconds: 10))..repeat();
   }
 
   // Track the selected index for the BottomNavigationBar
@@ -57,7 +57,7 @@ class _BottomNavState extends State<BottomNav> with TickerProviderStateMixin {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: theme.colorScheme.surface,
       body: _selectedIndex == 0 ? MainPage() : _pages[_selectedIndex - 1],
       bottomNavigationBar: BottomAppBar(
         height: 70,

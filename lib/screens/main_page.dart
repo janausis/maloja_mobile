@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:maloja_mobile/screens/settings_page.dart';
+import 'package:maloja_mobile/services/image_service.dart';
 import 'package:maloja_mobile/widgets/status_bar.dart';
 import 'package:maloja_mobile/widgets/status_bar_with_bottom_nav.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -17,7 +18,6 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -38,9 +38,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
           ),
         ],
       ),
-      body: Center(
-        child: Text('Main Page Content'),
-      ),
+      body: SafeArea(child: SizedBox())
     );
   }
 }
