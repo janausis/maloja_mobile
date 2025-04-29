@@ -3,8 +3,8 @@ import 'dart:convert';
 
 import 'package:maloja_mobile/services/setup_service.dart';
 
-class AlbumService {
-  Future<List<Album>> fetchAlbums(String s, String baseUrl) async {
+class TrackService {
+  Future<List<Track>> fetchTracks(String s, String baseUrl) async {
     try {
       String filter = "?in=today";
       switch (s) {
@@ -22,48 +22,58 @@ class AlbumService {
           break;
       }
 
-      final response = await http.get(Uri.parse('$baseUrl/apis/mlj_1/charts/albums$filter'));
+      final response = await http.get(Uri.parse('$baseUrl/apis/mlj_1/charts/tracks$filter'));
 
       if (response.statusCode == 200) {
         final jsonBody = json.decode(response.body);
 
         if (jsonBody['status'] == 'ok' && jsonBody['list'] is List) {
-          final List<dynamic> albumList = jsonBody['list'];
-          return albumList.map((albumData) => Album.fromJson(albumData)).toList();
+          final List<dynamic> trackList = jsonBody['list'];
+          return trackList.map((trackData) => Track.fromJson(trackData)).toList();
         } else {
           throw Exception('Invalid response structure');
         }
       } else {
-        throw Exception('Failed to load albums: ${response.statusCode}');
+        throw Exception('Failed to load tracks: ${response.statusCode}');
       }
     } catch (e) {
-      throw Exception('Error fetching albums: $e');
+      throw Exception('Error fetching tracks: $e');
     }
   }
 }
 
-class Album {
+
+
+class Track {
   final int id;
   final int rank;
-  final String albumTitle;
+  final String title;
+  final String album;
+  final int length;
   final int scrobbles;
   final List<String> artists;
 
-  Album({
+  Track({
     required this.id,
     required this.rank,
-    required this.albumTitle,
+    required this.title,
+    required this.album,
+    required this.length,
     required this.scrobbles,
     required this.artists,
   });
 
-  factory Album.fromJson(Map<String, dynamic> json) {
-    return Album(
-      id: json['album_id'] as int,
+  factory Track.fromJson(Map<String, dynamic> json) {
+    return Track(
+      id: json['track_id'] as int,
       rank: json['rank'] as int,
-      albumTitle: json['album']['albumtitle'] as String,
+      title: json["track"]['title'],
+      length: json["track"]['length'] as int,
+      album: json["track"]['album'] != null
+          ? json["track"]['album']['albumtitle'] as String
+          : "Unknown Album",
       scrobbles: json['scrobbles'] as int,
-      artists: List<String>.from(json['album']['artists']),
+      artists: List<String>.from(json["track"]['artists']),
     );
   }
 }

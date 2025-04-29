@@ -8,6 +8,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../widgets/loading_button.dart';
 import '../services/setup_service.dart';
 import '../widgets/status_bar.dart';
+import '../widgets/status_bar_with_bottom_nav.dart';
 import 'main_page.dart';
 
 class SetupPage extends StatefulWidget {
@@ -85,7 +86,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
         if (!mounted) return;
         Navigator.of(context).pushReplacement(
           CupertinoPageRoute(
-            builder: (context) => const MainPage(),
+            builder: (context) => const BottomNav(),
           ),
         );
 

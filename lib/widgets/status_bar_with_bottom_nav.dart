@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 
 
 import 'dart:math' as math;
-import 'package:maloja_mobile/screens/album_page.dart';
-import 'package:maloja_mobile/screens/artist_page.dart';
-import 'package:maloja_mobile/screens/scrobble_page.dart';
-import 'package:maloja_mobile/screens/track_page.dart';
+
+import 'package:maloja_mobile/screens/chart_page.dart';
+import 'package:material_symbols_icons/symbols.dart';
+
+
 
 import '../screens/main_page.dart';
 
@@ -71,7 +72,7 @@ class _BottomNavState extends State<BottomNav> with TickerProviderStateMixin {
               IconButton(
                 enableFeedback: true,
                 iconSize: 30,
-                icon: Icon(Icons.person, size: 30), // Replace with your own icon
+                icon: Icon(Symbols.artist, size: 30, fill: 1,), // Replace with your own icon
                 onPressed: () {
                   _onItemTapped(1);
                 },

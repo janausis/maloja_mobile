@@ -1,12 +1,15 @@
+
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 import 'package:maloja_mobile/services/setup_service.dart';
+import 'package:maloja_mobile/widgets/app_snackbar.dart';
 
 class ArtistService {
-  Future<List<Artist>> fetchArtists(String s) async {
+  Future<List<Artist>> fetchArtists(String s, String baseUrl) async {
     try {
-      String baseUrl = await ServerService().getServerUrl();
+
       String filter = "?in=today";
       switch (s) {
         case "week":
@@ -58,7 +61,7 @@ class Artist {
     required this.name,
     required this.scrobbles,
     required this.realScrobbles,
-    required this.associatedArtists
+    required this.associatedArtists,
   });
 
   factory Artist.fromJson(Map<String, dynamic> json) {
