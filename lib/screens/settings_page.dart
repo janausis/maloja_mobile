@@ -9,7 +9,8 @@ import 'package:maloja_mobile/widgets/status_bar.dart'; // Adjust as needed for 
 import '../utils/page_router.dart'; // Adjust import for SetupPage
 
 class SettingsPage extends StatefulWidget {
-  const SettingsPage({super.key});
+  final Box box;
+  const SettingsPage({super.key, required this.box});
 
   @override
   State<SettingsPage> createState() => _SettingsPageState();
@@ -55,7 +56,7 @@ class _SettingsPageState extends State<SettingsPage> {
     // If list is empty, navigate to the SetupPage
     if (urls.isEmpty) {
       if (!mounted) return;
-      NavigationUtil.pushReplacementPage(context, SetupPage());
+      NavigationUtil.pushReplacementPage(context, SetupPage(box: widget.box));
     }
   }
 
@@ -96,8 +97,8 @@ class _SettingsPageState extends State<SettingsPage> {
                           text: "New Domain",
                           textColor: theme.colorScheme.onSecondaryContainer,
                           icon: Icons.add,
-                          onPressed: () => NavigationUtil.pushPage(context, SetupPage()),
-                          onIconPressed: () => NavigationUtil.pushPage(context, SetupPage()),
+                          onPressed: () => NavigationUtil.pushPage(context, SetupPage(box: widget.box)),
+                          onIconPressed: () => NavigationUtil.pushPage(context, SetupPage(box: widget.box)),
                           selected: false,
                         );
                       } else if (urls[index] == selected) {

@@ -1,17 +1,15 @@
-import 'dart:math' as math;
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:maloja_mobile/screens/settings_page.dart';
-import 'package:maloja_mobile/services/image_service.dart';
-import 'package:maloja_mobile/widgets/status_bar.dart';
-import 'package:maloja_mobile/widgets/status_bar_with_bottom_nav.dart';
-import 'package:material_symbols_icons/symbols.dart';
+
 
 import '../utils/page_router.dart';
 
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  final Box box;
+  const MainPage({super.key, required this.box});
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -20,7 +18,6 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -32,7 +29,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
               // Navigate to SettingsPage when icon is pressed
               NavigationUtil.pushPage(
                 context,
-                SettingsPage(), // The page you want to navigate to
+                SettingsPage(box: widget.box), // The page you want to navigate to
               );
             },
           ),

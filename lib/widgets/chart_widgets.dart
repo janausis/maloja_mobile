@@ -1,153 +1,316 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:maloja_mobile/services/album_service.dart';
-import 'package:maloja_mobile/services/artist_service.dart';
+import 'package:maloja_mobile/services/image_service.dart';
+
+enum ChartType { ARTIST, TRACK, ALBUM }
 
 class ChartDisplayData {
   int id;
   String name;
   int rank;
-  Widget image;
   int scrobbles;
+  ChartType type;
   List<String> artists;
 
-  ChartDisplayData({required this.id, required this.name, required this.rank, required this.image, required this.scrobbles, required this.artists});
+  ChartDisplayData({
+    required this.id,
+    required this.name,
+    required this.rank,
+    required this.scrobbles,
+    required this.type,
+    required this.artists,
+  });
 
   String getArtist() {
     return artists.join(", ");
   }
 }
 
+// --------------------- BigChartItem ---------------------
 class BigChartItem extends StatelessWidget {
   final ChartDisplayData chartData;
   final bool showRanking;
   final bool showArtist;
   final bool showScrobbles;
+  final String url;
   final ThemeData theme;
 
-  const BigChartItem({super.key, required this.chartData, this.showRanking = true, this.showScrobbles = true, this.showArtist = true, required this.theme});
+  const BigChartItem({
+    super.key,
+    required this.chartData,
+    this.showRanking = true,
+    this.showScrobbles = true,
+    this.showArtist = true,
+    required this.url,
+    required this.theme,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        children: [
-          Padding(
-            padding: EdgeInsets.only(top: 15, bottom: 30),
-            child: Container(
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: Color.fromARGB(150, 0, 0, 0),
-                    spreadRadius: 5,
-                    blurRadius: 10,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: SizedBox(
-                width: 250,
-                height: 250,
-                child: Stack(
-                  children: [
-                    chartData.image,
+    return RepaintBoundary(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Define a dynamic size based on available width
+          final double size = constraints.maxWidth * 0.6; // 60% of parent width
+          final double clampedSize = size.clamp(150.0, 300.0); // clamp to a min/max
 
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.black.withAlpha(250),
-                              Colors.black.withAlpha(0),
-                            ],
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.center,
+          return Center(
+            child: Column(
+              children: [
+                const Padding(padding: EdgeInsets.only(top: 15, bottom: 30)),
+                Container(
+                  decoration: const BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color.fromARGB(150, 0, 0, 0),
+                        spreadRadius: 5,
+                        blurRadius: 10,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: SizedBox(
+                    width: clampedSize,
+                    height: clampedSize,
+                    child: Stack(
+                      children: [
+                        ImageService.buildImageWithResolution(chartData.id, 2000, url, chartData.type),
+                        Positioned.fill(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.black.withAlpha(250),
+                                  Colors.black.withAlpha(0),
+                                ],
+                                begin: Alignment.bottomCenter,
+                                end: Alignment.center,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-
-                    Positioned(
-                      bottom: 10,
-                      left: 0,
-                      right: 0,
-                      child: Container(
-                        color: null,
-                        padding: EdgeInsets.symmetric(
-                          vertical: 5,
-                          horizontal: 10,
+                        Positioned(
+                          bottom: 10,
+                          left: 0,
+                          right: 0,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Text(
+                                  chartData.name,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                Wrap(
+                                  alignment: WrapAlignment.center,
+                                  children: [
+                                    if (showArtist)
+                                      Text(
+                                        showScrobbles
+                                            ? "${chartData.getArtist()} • "
+                                            : chartData.getArtist(),
+                                        style: TextStyle(
+                                          color: Colors.white.withAlpha(200),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    if (showScrobbles)
+                                      Text(
+                                        "${chartData.scrobbles} scrobbles",
+                                        style: TextStyle(
+                                          color: Colors.white.withAlpha(200),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.center,
+                      ],
+                    ),
+                  ),
+                ),
+                const Padding(padding: EdgeInsets.only(top: 30)),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// --------------------- SmallChartData ---------------------
+class SmallChartData extends StatelessWidget {
+  final ChartDisplayData chartData;
+  final bool showRanking;
+  final bool showArtist;
+  final bool showScrobbles;
+  final String url;
+  final ThemeData theme;
+
+  const SmallChartData({
+    super.key,
+    required this.chartData,
+    this.showRanking = true,
+    this.showScrobbles = true,
+    this.showArtist = true,
+    required this.url,
+    required this.theme,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: Center(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 1.0,
+                horizontal: 5.0,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: CupertinoButton(
+                  sizeStyle: CupertinoButtonSize.large,
+                  padding: EdgeInsets.zero,
+                  borderRadius: BorderRadius.circular(10),
+                  onPressed: () {},
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 5,
+                      horizontal: 20,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(100),
+                                spreadRadius: 0.1,
+                                blurRadius: 10,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          child: SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: ImageService.buildImage(
+                              chartData.id,
+                              url,
+                              chartData.type,
+                            ),
+                          ),
+                        ),
+                        showRanking
+                            ? SizedBox(
+                              width: 60,
+                              child: Text(
+                                "  #${chartData.rank}",
+                                style: const TextStyle(
+                                  color: Color.fromARGB(255, 150, 150, 150),
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            )
+                            : const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 chartData.name,
-                                textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: theme.colorScheme.onSurface,
                                   fontSize: 17,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                               Wrap(
                                 children: [
-                                  showArtist ? Text(
-                                    showScrobbles ? "${chartData.getArtist()} • " : chartData.getArtist(),
-                                    style: TextStyle(
-                                      color: Colors.white.withAlpha(200), // fainter
-                                      fontSize: 14, // slightly smaller
-                                      fontWeight: FontWeight.w400, // lighter weight
-                                    ),
-                                  ) : SizedBox(),
-                                  SizedBox(width: 0,),
-                                  showScrobbles ? Text(
-                                    "${chartData.scrobbles} scrobbles",
-                                    style: TextStyle(
-                                      color: Colors.white.withAlpha(200), // fainter
-                                      fontSize: 14, // slightly smaller
-                                      fontWeight: FontWeight.w400, // lighter weight
-                                    ),
-                                  ) : SizedBox(),
+                                  showArtist
+                                      ? Text(
+                                        showScrobbles
+                                            ? "${chartData.getArtist()} • "
+                                            : chartData.getArtist(),
+                                        style: TextStyle(
+                                          color: theme.colorScheme.onSurface
+                                              .withAlpha(200),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      )
+                                      : const SizedBox(),
+                                  const SizedBox(width: 0),
+                                  showScrobbles
+                                      ? Text(
+                                        "${chartData.scrobbles} scrobbles",
+                                        style: TextStyle(
+                                          color: theme.colorScheme.onSurface
+                                              .withAlpha(200),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      )
+                                      : const SizedBox(),
                                 ],
-                              )
+                              ),
                             ],
                           ),
-
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
+// --------------------- MediumChartItem ---------------------
 class MediumChartItem extends StatelessWidget {
   final ChartDisplayData chartDataLeft;
   final ChartDisplayData chartDataRight;
+  final String url;
 
   const MediumChartItem({
     super.key,
     required this.chartDataLeft,
     required this.chartDataRight,
+    required this.url,
   });
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 25),
+        padding: const EdgeInsets.symmetric(vertical: 25),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 boxShadow: [
                   BoxShadow(
                     color: Color.fromARGB(150, 0, 0, 0),
@@ -162,9 +325,11 @@ class MediumChartItem extends StatelessWidget {
                 height: 120,
                 child: Stack(
                   children: [
-                    chartDataLeft.image,
-
-                    // Farbverlauf (Gradient Overlay)
+                    ImageService.buildImage(
+                      chartDataLeft.id,
+                      url,
+                      chartDataLeft.type,
+                    ),
                     Positioned.fill(
                       child: Container(
                         decoration: BoxDecoration(
@@ -185,15 +350,14 @@ class MediumChartItem extends StatelessWidget {
                       left: 0,
                       right: 0,
                       child: Container(
-                        color: null,
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           vertical: 5,
                           horizontal: 10,
                         ),
                         child: Text(
                           chartDataLeft.name,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -206,7 +370,7 @@ class MediumChartItem extends StatelessWidget {
               ),
             ),
             Container(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 boxShadow: [
                   BoxShadow(
                     color: Color.fromARGB(150, 0, 0, 0),
@@ -221,9 +385,11 @@ class MediumChartItem extends StatelessWidget {
                 height: 120,
                 child: Stack(
                   children: [
-                    chartDataRight.image,
-
-                    // Farbverlauf (Gradient Overlay)
+                    ImageService.buildImage(
+                      chartDataRight.id,
+                      url,
+                      chartDataRight.type,
+                    ),
                     Positioned.fill(
                       child: Container(
                         decoration: BoxDecoration(
@@ -244,15 +410,14 @@ class MediumChartItem extends StatelessWidget {
                       left: 0,
                       right: 0,
                       child: Container(
-                        color: null,
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           vertical: 5,
                           horizontal: 10,
                         ),
                         child: Text(
                           chartDataRight.name,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.white,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -270,114 +435,3 @@ class MediumChartItem extends StatelessWidget {
     );
   }
 }
-
-class SmallChartData extends StatelessWidget {
-  final ChartDisplayData chartData;
-  final bool showRanking;
-  final bool showArtist;
-  final bool showScrobbles;
-  final ThemeData theme;
-
-  const SmallChartData({super.key, required this.chartData, this.showRanking = true, this.showScrobbles = true, this.showArtist = true, required this.theme});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 1.0, horizontal: 5.0),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: CupertinoButton(
-                sizeStyle: CupertinoButtonSize.large,
-                padding: EdgeInsets.zero,
-                borderRadius: BorderRadius.circular(10),
-                onPressed: () => {},
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 5,
-                    horizontal: 20,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(100),
-                              spreadRadius: 0.1,
-                              blurRadius: 10,
-                              offset: Offset(0, 1),
-                            ),
-                          ],
-                        ),
-                        child: SizedBox(
-                          width: 40,
-                          height: 40,
-                          child: chartData.image,
-                        ),
-                      ),
-                      showRanking ? SizedBox(
-                        width: 60,
-                        child: Text(
-                          "  #${chartData.rank}",
-                          style: TextStyle(
-                            color: Color.fromARGB(255, 150, 150, 150),
-                            fontSize: 17,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ) : SizedBox(width: 10,),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              chartData.name,
-                              style: TextStyle(
-                                color: theme.colorScheme.onSurface,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Wrap(
-                              children: [
-                                showArtist ? Text(
-                                  showScrobbles ? "${chartData.getArtist()} • " : chartData.getArtist(),
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onSurface.withAlpha(200), // fainter
-                                    fontSize: 14, // slightly smaller
-                                    fontWeight: FontWeight.w400, // lighter weight
-                                  ),
-                                ) : SizedBox(),
-                                SizedBox(width: 0,),
-                                showScrobbles ? Text(
-                                  "${chartData.scrobbles} scrobbles",
-                                  style: TextStyle(
-                                    color: theme.colorScheme.onSurface.withAlpha(200), // fainter/ fainter
-                                    fontSize: 14, // slightly smaller
-                                    fontWeight: FontWeight.w400, // lighter weight
-                                  ),
-                                ) : SizedBox(),
-                              ],
-                            )
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-
-

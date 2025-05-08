@@ -16,13 +16,14 @@ void main() async {
 
 
 
-  runApp(MyApp(urls: urls));
+  runApp(MyApp(urls: urls, box: settingsBox,));
 }
 
 class MyApp extends StatelessWidget {
   final List<String> urls;
+  final Box box;
 
-  const MyApp({super.key, required this.urls});
+  const MyApp({super.key, required this.urls, required this.box});
 
 
   @override
@@ -51,7 +52,7 @@ class MyApp extends StatelessWidget {
           },
         ),
       ),
-      home: urls.isEmpty ? const SetupPage() : const BottomNav( ),
+      home: urls.isEmpty ? SetupPage(box: box) : BottomNav(box: box),
 
       debugShowCheckedModeBanner: false,
     );

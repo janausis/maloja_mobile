@@ -13,32 +13,38 @@ import '../services/track_service.dart';
 
 class ChartPage extends StatefulWidget {
   final String chartType; // 'artist', 'album', 'track'
+  final Box box;
 
-  const ChartPage({super.key, required this.chartType});
+  const ChartPage({super.key, required this.chartType, required this.box});
 
   @override
   State<ChartPage> createState() => _ChartPageState();
 }
 
 class ArtistPage extends ChartPage {
-  const ArtistPage({super.key, super.chartType = "artist"});
+  const ArtistPage({super.key, super.chartType = "artist", required super.box});
 }
 
 class AlbumPage extends ChartPage {
-  const AlbumPage({super.key, super.chartType = "album"});
+  const AlbumPage({super.key, super.chartType = "album", required super.box});
 }
 
 class TrackPage extends ChartPage {
-  const TrackPage({super.key, super.chartType = "track"});
+  const TrackPage({super.key, super.chartType = "track", required super.box});
 }
 
 class ScrobblePage extends ChartPage {
-  const ScrobblePage({super.key, super.chartType = "scrobbles"});
+  const ScrobblePage({
+    super.key,
+    super.chartType = "scrobbles",
+    required super.box,
+  });
 }
 
 class _ChartPageState extends State<ChartPage> {
   late List<ChartDisplayData> charts = [];
-  late Box box;
+  late String url;
+
   bool loaded = false;
 
   final List<String> _pages = ["today", "week", "month", "year", "total"];
@@ -47,14 +53,13 @@ class _ChartPageState extends State<ChartPage> {
   @override
   void initState() {
     super.initState();
+    url = widget.box.get("selectedUrl", defaultValue: "");
     _loadCharts();
   }
 
   Future<void> _loadCharts() async {
     try {
-      box = await Hive.openBox('settings');
       List<ChartDisplayData> data = [];
-      var url = box.get("selectedUrl", defaultValue: "");
 
       switch (widget.chartType) {
         case 'artist':
@@ -68,10 +73,10 @@ class _ChartPageState extends State<ChartPage> {
                     (a) => ChartDisplayData(
                       id: a.id,
                       name: a.name,
+                      type: ChartType.ARTIST,
                       rank: a.rank,
-                      image: ImageService.buildArtistImage(a.id, url),
                       scrobbles: a.scrobbles,
-                      artists: [a.name]
+                      artists: [a.name],
                     ),
                   )
                   .toList();
@@ -87,10 +92,10 @@ class _ChartPageState extends State<ChartPage> {
                     (a) => ChartDisplayData(
                       id: a.id,
                       name: a.albumTitle,
+                      type: ChartType.ALBUM,
                       rank: a.rank,
-                      image: ImageService.buildAlbumImage(a.id, url),
                       scrobbles: a.scrobbles,
-                      artists: a.artists
+                      artists: a.artists,
                     ),
                   )
                   .toList();
@@ -106,10 +111,10 @@ class _ChartPageState extends State<ChartPage> {
                     (t) => ChartDisplayData(
                       id: t.id,
                       name: t.title,
+                      type: ChartType.TRACK,
                       rank: t.rank,
-                      image: ImageService.buildTrackImage(t.id, url),
                       scrobbles: t.scrobbles,
-                      artists: t.artists
+                      artists: t.artists,
                     ),
                   )
                   .toList();
@@ -125,10 +130,10 @@ class _ChartPageState extends State<ChartPage> {
                     (t) => ChartDisplayData(
                       id: t.id,
                       name: t.title,
+                      type: ChartType.TRACK,
                       rank: t.rank,
-                      image: ImageService.buildTrackImage(t.id, url),
                       scrobbles: t.rank,
-                      artists: t.artists
+                      artists: t.artists,
                     ),
                   )
                   .toList();
@@ -171,7 +176,12 @@ class _ChartPageState extends State<ChartPage> {
           onRefresh: _loadCharts, // This is where the refresh action happens
           child: CustomScrollView(
             slivers: [
-              SliverToBoxAdapter(child: _buildTimeframeSelector(theme)),
+              SliverToBoxAdapter(
+                child: TimeframeSelector(
+                  selectedIndex: _selectedIndex,
+                  onTap: _onItemTapped,
+                ),
+              ),
               if (!loaded)
                 SliverFillRemaining(
                   hasScrollBody: false,
@@ -182,36 +192,16 @@ class _ChartPageState extends State<ChartPage> {
                   delegate: SliverChildBuilderDelegate(
                     childCount: charts.length,
                     (sliverContext, index) {
-                      bool isLastItem = index == charts.length - 1;
-                      if (index == 0) {
-                        return BigChartItem(
-                          chartData: charts[index],
-                          theme: theme,
-                          showRanking: widget.chartType != "scrobbles",
-                          showScrobbles: widget.chartType != "scrobbles",
-                          showArtist: widget.chartType != "artist",);
-                      } else {
-                        return Column(
-                          children: [
-                            SmallChartData(
-                              chartData: charts[index],
-                              theme: theme,
-                              showRanking: widget.chartType != "scrobbles",
-                              showScrobbles: widget.chartType != "scrobbles",
-                              showArtist: widget.chartType != "artist",
-                            ),
-                            if (!isLastItem)
-                              Container(
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                ),
-                                height: 0.5,
-                                color: CupertinoColors.systemGrey4,
-                              ),
-                            if (isLastItem) SizedBox(height: 50),
-                          ],
-                        );
-                      }
+                      return buildChartItem(
+                        data: charts[index],
+                        isFirst: index == 0,
+                        url: url,
+                        isLast: index == charts.length - 1,
+                        theme: theme,
+                        showRanking: widget.chartType != "scrobbles",
+                        showScrobbles: widget.chartType != "scrobbles",
+                        showArtist: widget.chartType != "artist",
+                      );
                     },
                   ),
                 ),
@@ -222,44 +212,92 @@ class _ChartPageState extends State<ChartPage> {
     );
   }
 
-  Widget _buildTimeframeSelector(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 0),
-      child: Center(
-        child: Container(
-          height: 60,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _pages.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 7,
-                  vertical: 10,
-                ),
-                child: ElevatedButton(
-                  onPressed: () => _onItemTapped(index),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        _selectedIndex == index
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.secondaryContainer,
-                  ),
-                  child: Text(
-                    _pages[index].toUpperCase(),
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                      color:
-                          _selectedIndex == index
-                              ? theme.colorScheme.onPrimary
-                              : theme.colorScheme.onSecondaryContainer,
-                    ),
-                  ),
-                ),
-              );
-            },
+  Widget buildChartItem({
+    required ChartDisplayData data,
+    required bool isFirst,
+    required bool isLast,
+    required ThemeData theme,
+    required bool showRanking,
+    required bool showScrobbles,
+    required bool showArtist,
+    required String url,
+  }) {
+    final content =
+        isFirst
+            ? BigChartItem(
+              chartData: data,
+              theme: theme,
+              url: url,
+              showRanking: showRanking,
+              showScrobbles: showScrobbles,
+              showArtist: showArtist,
+            )
+            : SmallChartData(
+              chartData: data,
+              theme: theme,
+              url: url,
+              showRanking: showRanking,
+              showScrobbles: showScrobbles,
+              showArtist: showArtist,
+            );
+
+    return Column(
+      key: ValueKey(data.id),
+      children: [
+        content,
+        if (!isLast)
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20),
+            child: Divider(height: 0.5, thickness: 0.5),
           ),
+        if (isLast) const SizedBox(height: 50),
+      ],
+    );
+  }
+}
+
+class TimeframeSelector extends StatelessWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onTap;
+
+  TimeframeSelector({required this.selectedIndex, required this.onTap});
+
+  final List<String> _pages = ["today", "week", "month", "year", "total"];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return RepaintBoundary(
+      child: SizedBox(
+        height: 60,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          itemCount: _pages.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 10),
+              child: ElevatedButton(
+                onPressed: () => onTap(index),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      selectedIndex == index
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.secondaryContainer,
+                ),
+                child: Text(
+                  _pages[index].toUpperCase(),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color:
+                        selectedIndex == index
+                            ? theme.colorScheme.onPrimary
+                            : theme.colorScheme.onSecondaryContainer,
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );

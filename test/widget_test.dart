@@ -7,13 +7,15 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 import 'package:maloja_mobile/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp(urls: []));
+    final settingsBox = await Hive.openBox('settings');
+    await tester.pumpWidget(MyApp(urls: const [], box: settingsBox,));
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

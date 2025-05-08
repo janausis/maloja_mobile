@@ -12,7 +12,8 @@ import '../widgets/status_bar_with_bottom_nav.dart';
 import 'main_page.dart';
 
 class SetupPage extends StatefulWidget {
-  const SetupPage({super.key});
+  final Box box;
+  const SetupPage({super.key, required this.box});
 
   @override
   State<SetupPage> createState() => _SetupPageState();
@@ -86,7 +87,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
         if (!mounted) return;
         Navigator.of(context).pushReplacement(
           CupertinoPageRoute(
-            builder: (context) => const BottomNav(),
+            builder: (context) => BottomNav(box: widget.box),
           ),
         );
 

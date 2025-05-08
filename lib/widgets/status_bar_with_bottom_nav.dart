@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
 
 import 'dart:math' as math;
@@ -12,7 +13,9 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../screens/main_page.dart';
 
 class BottomNav extends StatefulWidget {
-  const BottomNav({super.key});
+  final Box box;
+
+  const BottomNav({super.key, required this.box});
 
   @override
   State<BottomNav> createState() => _BottomNavState();
@@ -20,23 +23,23 @@ class BottomNav extends StatefulWidget {
 
 class _BottomNavState extends State<BottomNav> with TickerProviderStateMixin {
   late final AnimationController _controller;
+  late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(vsync: this, duration: Duration(seconds: 10))..repeat();
+    _pages = [
+      ArtistPage(box: widget.box),
+      TrackPage(box: widget.box),
+      AlbumPage(box: widget.box),
+      ScrobblePage(box: widget.box),
+    ];
   }
 
   // Track the selected index for the BottomNavigationBar
   int _selectedIndex = 0;
 
-  // List of pages to navigate between
-  final List<Widget> _pages = [
-    ArtistPage(),
-    TrackPage(),
-    AlbumPage(),
-    ScrobblePage(),
-  ];
 
   // Function to update the selected tab and navigate to the corresponding page
   void _onItemTapped(int index) {
@@ -57,7 +60,7 @@ class _BottomNavState extends State<BottomNav> with TickerProviderStateMixin {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      body: _selectedIndex == 0 ? MainPage() : _pages[_selectedIndex - 1],
+      body: _selectedIndex == 0 ? MainPage(box: widget.box) : _pages[_selectedIndex - 1],
       bottomNavigationBar: BottomAppBar(
         height: 70,
         shape: CircularNotchedRectangle(),
