@@ -2,6 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:maloja_mobile/services/image_service.dart';
 
+import '../services/pulse_service.dart';
+import 'package:intl/intl.dart';
+
 enum ChartType { ARTIST, TRACK, ALBUM }
 
 class ChartDisplayData {
@@ -11,6 +14,7 @@ class ChartDisplayData {
   int scrobbles;
   ChartType type;
   List<String> artists;
+  int timeCreated;
 
   ChartDisplayData({
     required this.id,
@@ -19,6 +23,7 @@ class ChartDisplayData {
     required this.scrobbles,
     required this.type,
     required this.artists,
+    this.timeCreated = 0,
   });
 
   String getArtist() {
@@ -32,6 +37,7 @@ class BigChartItem extends StatelessWidget {
   final bool showRanking;
   final bool showArtist;
   final bool showScrobbles;
+  final bool showTimeCreated;
   final String url;
   final ThemeData theme;
 
@@ -41,6 +47,7 @@ class BigChartItem extends StatelessWidget {
     this.showRanking = true,
     this.showScrobbles = true,
     this.showArtist = true,
+    this.showTimeCreated = false,
     required this.url,
     required this.theme,
   });
@@ -52,7 +59,10 @@ class BigChartItem extends StatelessWidget {
         builder: (context, constraints) {
           // Define a dynamic size based on available width
           final double size = constraints.maxWidth * 0.6; // 60% of parent width
-          final double clampedSize = size.clamp(150.0, 300.0); // clamp to a min/max
+          final double clampedSize = size.clamp(
+            150.0,
+            300.0,
+          ); // clamp to a min/max
 
           return Center(
             child: Column(
@@ -74,7 +84,12 @@ class BigChartItem extends StatelessWidget {
                     height: clampedSize,
                     child: Stack(
                       children: [
-                        ImageService.buildImageWithResolution(chartData.id, 2000, url, chartData.type),
+                        ImageService.buildImageWithResolution(
+                          chartData.id,
+                          2000,
+                          url,
+                          chartData.type,
+                        ),
                         Positioned.fill(
                           child: Container(
                             decoration: BoxDecoration(
@@ -95,7 +110,10 @@ class BigChartItem extends StatelessWidget {
                           left: 0,
                           right: 0,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 5,
+                              horizontal: 10,
+                            ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
@@ -104,10 +122,11 @@ class BigChartItem extends StatelessWidget {
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
                                     color: Colors.white,
-                                    fontSize: 17,
+                                    fontSize: 18,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
+
                                 Wrap(
                                   alignment: WrapAlignment.center,
                                   children: [
@@ -118,8 +137,8 @@ class BigChartItem extends StatelessWidget {
                                             : chartData.getArtist(),
                                         style: TextStyle(
                                           color: Colors.white.withAlpha(200),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                     if (showScrobbles)
@@ -127,12 +146,23 @@ class BigChartItem extends StatelessWidget {
                                         "${chartData.scrobbles} scrobbles",
                                         style: TextStyle(
                                           color: Colors.white.withAlpha(200),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400,
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       ),
                                   ],
                                 ),
+                                if (showTimeCreated) const SizedBox(height: 1),
+                                if (showTimeCreated)
+                                  Text(
+                                    "Played at: ${DateFormat('yyyy/MM/dd HH:mm').format(DateTime.fromMillisecondsSinceEpoch(chartData.timeCreated * 1000))}",
+                                    style: TextStyle(
+                                      color: Colors.white.withAlpha(200),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                if (showTimeCreated) const SizedBox(height: 1),
                               ],
                             ),
                           ),
@@ -157,6 +187,7 @@ class SmallChartData extends StatelessWidget {
   final bool showRanking;
   final bool showArtist;
   final bool showScrobbles;
+  final bool showTimeCreated;
   final String url;
   final ThemeData theme;
 
@@ -166,6 +197,7 @@ class SmallChartData extends StatelessWidget {
     this.showRanking = true,
     this.showScrobbles = true,
     this.showArtist = true,
+    this.showTimeCreated = false,
     required this.url,
     required this.theme,
   });
@@ -225,12 +257,12 @@ class SmallChartData extends StatelessWidget {
                                 "  #${chartData.rank}",
                                 style: const TextStyle(
                                   color: Color.fromARGB(255, 150, 150, 150),
-                                  fontSize: 17,
+                                  fontSize: 19,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
                             )
-                            : const SizedBox(width: 10),
+                            : const SizedBox(width: 15),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,10 +271,11 @@ class SmallChartData extends StatelessWidget {
                                 chartData.name,
                                 style: TextStyle(
                                   color: theme.colorScheme.onSurface,
-                                  fontSize: 17,
+                                  fontSize: 18,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
+
                               Wrap(
                                 children: [
                                   showArtist
@@ -252,9 +285,9 @@ class SmallChartData extends StatelessWidget {
                                             : chartData.getArtist(),
                                         style: TextStyle(
                                           color: theme.colorScheme.onSurface
-                                              .withAlpha(200),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400,
+                                              .withAlpha(150),
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       )
                                       : const SizedBox(),
@@ -264,13 +297,120 @@ class SmallChartData extends StatelessWidget {
                                         "${chartData.scrobbles} scrobbles",
                                         style: TextStyle(
                                           color: theme.colorScheme.onSurface
-                                              .withAlpha(200),
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w400,
+                                              .withAlpha(150),
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                       )
                                       : const SizedBox(),
                                 ],
+                              ),
+                              if (showTimeCreated) const SizedBox(height: 1),
+                              if (showTimeCreated)
+                                Text(
+                                  DateFormat('yyyy/MM/dd HH:mm').format(
+                                    DateTime.fromMillisecondsSinceEpoch(
+                                      chartData.timeCreated * 1000,
+                                    ),
+                                  ),
+                                  style: TextStyle(
+                                    color: Colors.white.withAlpha(130),
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w400,
+                                  ),
+                                ),
+                              if (showTimeCreated) const SizedBox(height: 1),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// --------------------- SmallPulseData ---------------------
+class SmallPulseData extends StatelessWidget {
+  final Pulse pulse;
+  final ThemeData theme;
+
+  const SmallPulseData({super.key, required this.pulse, required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    return RepaintBoundary(
+      child: Center(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 1.0,
+                horizontal: 5.0,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: CupertinoButton(
+                  sizeStyle: CupertinoButtonSize.large,
+                  padding: EdgeInsets.zero,
+                  borderRadius: BorderRadius.circular(10),
+                  onPressed: () {},
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 5,
+                      horizontal: 20,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                pulse.description,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface,
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Wrap(
+                                children: [
+                                  Text(
+                                    "${pulse.scrobbles} scrobbles",
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onSurface
+                                          .withAlpha(200),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              LinearProgressIndicator(
+                                minHeight: 10,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(5),
+                                ),
+                                value: pulse.percentage,
+                                // Set the percentage value here
+                                backgroundColor: theme.colorScheme.onSurface
+                                    .withAlpha(50),
+                                // Light background color
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  theme
+                                      .colorScheme
+                                      .primary, // Use the primary color for progress
+                                ),
                               ),
                             ],
                           ),

@@ -6,6 +6,7 @@ import 'package:maloja_mobile/services/artist_service.dart';
 import 'package:maloja_mobile/services/image_service.dart';
 import 'package:maloja_mobile/widgets/app_snackbar.dart';
 import 'package:maloja_mobile/widgets/chart_widgets.dart';
+import 'package:maloja_mobile/widgets/main_app_bar.dart';
 
 import '../services/album_service.dart';
 import '../services/scrobble_service.dart';
@@ -48,11 +49,16 @@ class _ChartPageState extends State<ChartPage> {
   bool loaded = false;
 
   final List<String> _pages = ["today", "week", "month", "year", "total"];
-  int _selectedIndex = 0;
+  int _selectedIndex = 2;
+
 
   @override
   void initState() {
     super.initState();
+    if (widget.chartType == "scrobbles") {
+      _selectedIndex = 3;
+    }
+
     url = widget.box.get("selectedUrl", defaultValue: "");
     _loadCharts();
   }
@@ -134,6 +140,7 @@ class _ChartPageState extends State<ChartPage> {
                       rank: t.rank,
                       scrobbles: t.rank,
                       artists: t.artists,
+                      timeCreated: t.timeCreated
                     ),
                   )
                   .toList();
@@ -168,20 +175,22 @@ class _ChartPageState extends State<ChartPage> {
     return Scaffold(
       appBar:
           widget.chartType != "scrobbles"
-              ? AppBar(title: Text('Top ${widget.chartType.capitalize()}s'))
-              : AppBar(title: Text('Scrobbles')),
+              ? MainAppBar(input: 'Top ${widget.chartType.capitalize()}s', box: widget.box,)
+              : MainAppBar(input: 'Recently Played', box: widget.box,),
       // you can add a small extension for capitalize
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadCharts, // This is where the refresh action happens
           child: CustomScrollView(
             slivers: [
-              SliverToBoxAdapter(
-                child: TimeframeSelector(
-                  selectedIndex: _selectedIndex,
-                  onTap: _onItemTapped,
+              if (widget.chartType != "scrobbles")
+                SliverToBoxAdapter(
+                  child: TimeframeSelector(
+                    pages: _pages,
+                    selectedIndex: _selectedIndex,
+                    onTap: _onItemTapped,
+                  ),
                 ),
-              ),
               if (!loaded)
                 SliverFillRemaining(
                   hasScrollBody: false,
@@ -199,6 +208,7 @@ class _ChartPageState extends State<ChartPage> {
                         isLast: index == charts.length - 1,
                         theme: theme,
                         showRanking: widget.chartType != "scrobbles",
+                        showTimeCreated: widget.chartType == "scrobbles",
                         showScrobbles: widget.chartType != "scrobbles",
                         showArtist: widget.chartType != "artist",
                       );
@@ -218,6 +228,7 @@ class _ChartPageState extends State<ChartPage> {
     required bool isLast,
     required ThemeData theme,
     required bool showRanking,
+    required bool showTimeCreated,
     required bool showScrobbles,
     required bool showArtist,
     required String url,
@@ -231,6 +242,7 @@ class _ChartPageState extends State<ChartPage> {
               showRanking: showRanking,
               showScrobbles: showScrobbles,
               showArtist: showArtist,
+              showTimeCreated: showTimeCreated,
             )
             : SmallChartData(
               chartData: data,
@@ -239,6 +251,7 @@ class _ChartPageState extends State<ChartPage> {
               showRanking: showRanking,
               showScrobbles: showScrobbles,
               showArtist: showArtist,
+              showTimeCreated: showTimeCreated,
             );
 
     return Column(
@@ -259,10 +272,11 @@ class _ChartPageState extends State<ChartPage> {
 class TimeframeSelector extends StatelessWidget {
   final int selectedIndex;
   final ValueChanged<int> onTap;
+  final List<String> pages;
 
-  TimeframeSelector({required this.selectedIndex, required this.onTap});
+  TimeframeSelector({required this.selectedIndex, required this.onTap, required this.pages});
 
-  final List<String> _pages = ["today", "week", "month", "year", "total"];
+
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +286,7 @@ class TimeframeSelector extends StatelessWidget {
         height: 60,
         child: ListView.builder(
           scrollDirection: Axis.horizontal,
-          itemCount: _pages.length,
+          itemCount: pages.length,
           itemBuilder: (context, index) {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 10),
@@ -285,7 +299,7 @@ class TimeframeSelector extends StatelessWidget {
                           : theme.colorScheme.secondaryContainer,
                 ),
                 child: Text(
-                  _pages[index].toUpperCase(),
+                  pages[index].toUpperCase(),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 12,

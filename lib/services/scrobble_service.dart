@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:maloja_mobile/services/setup_service.dart';
 
+// TODO ADD AUTO PAGING AND ALL TIME AS DEFAULT
 class ScrobbleService {
   Future<List<Scrobble>> fetchScrobbles(String s, String baseUrl) async {
     try {
@@ -52,7 +53,7 @@ class Scrobble {
   final String title;
   final String album;
   final int length;
-  final int time_created;
+  final int timeCreated;
   final List<String> artists;
 
   Scrobble({
@@ -61,7 +62,7 @@ class Scrobble {
     required this.title,
     required this.album,
     required this.length,
-    required this.time_created,
+    required this.timeCreated,
     required this.artists,
   });
 
@@ -74,7 +75,7 @@ class Scrobble {
       album: json["track"]['album'] != null
           ? json["track"]['album']['albumtitle'] as String
           : "Unknown Album",
-      time_created: json['rawscrobble']["scrobble_time"] as int,
+      timeCreated: json['rawscrobble']["scrobble_time"] as int,
       artists: List<String>.from(json["track"]['artists']),
     );
   }

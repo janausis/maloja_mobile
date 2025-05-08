@@ -33,7 +33,7 @@ class _BottomNavState extends State<BottomNav> with TickerProviderStateMixin {
       ArtistPage(box: widget.box),
       TrackPage(box: widget.box),
       AlbumPage(box: widget.box),
-      ScrobblePage(box: widget.box),
+      MainPage(box: widget.box),
     ];
   }
 
@@ -60,7 +60,7 @@ class _BottomNavState extends State<BottomNav> with TickerProviderStateMixin {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      body: _selectedIndex == 0 ? MainPage(box: widget.box) : _pages[_selectedIndex - 1],
+      body: _selectedIndex == 0 ? ScrobblePage(box: widget.box) : _pages[_selectedIndex - 1],
       bottomNavigationBar: BottomAppBar(
         height: 70,
         shape: CircularNotchedRectangle(),
