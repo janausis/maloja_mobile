@@ -314,7 +314,7 @@ class SmallChartData extends StatelessWidget {
                                     ),
                                   ),
                                   style: TextStyle(
-                                    color: Colors.white.withAlpha(130),
+                                    color: theme.colorScheme.onSurface.withAlpha(130),
                                     fontSize: 13,
                                     fontWeight: FontWeight.w400,
                                   ),

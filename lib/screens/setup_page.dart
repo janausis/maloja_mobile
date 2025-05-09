@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import services package
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
+import 'package:maloja_mobile/utils/page_router.dart';
 import 'package:maloja_mobile/widgets/app_snackbar.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import '../widgets/loading_button.dart';
@@ -85,11 +86,7 @@ class _SetupPageState extends State<SetupPage> with TickerProviderStateMixin {
         }
 
         if (!mounted) return;
-        Navigator.of(context).pushReplacement(
-          CupertinoPageRoute(
-            builder: (context) => BottomNav(box: widget.box),
-          ),
-        );
+        NavigationUtil.pushReplacementPage(context, BottomNav(box: box));
 
       } else {
         if (!mounted) return;

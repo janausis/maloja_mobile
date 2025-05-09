@@ -97,7 +97,7 @@ class _BottomNavState extends State<BottomNav> with TickerProviderStateMixin {
               ),
               IconButton(
                 iconSize: 30,
-                icon: Icon(Icons.library_music, size: 30),
+                icon: Icon(Symbols.leaderboard, fill: 1, size: 30),
                 onPressed: () {
                   _onItemTapped(4);
                 },

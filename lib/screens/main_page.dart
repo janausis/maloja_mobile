@@ -26,7 +26,7 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   bool loaded = false;
 
   final List<String> _pages = ["days", "weeks", "months", "years"];
-  int _selectedIndex = 0;
+  int _selectedIndex = 2;
 
   @override
   void initState() {
