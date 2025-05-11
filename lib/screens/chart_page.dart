@@ -47,10 +47,12 @@ class _ChartPageState extends State<ChartPage> {
   late String url;
 
   bool loaded = false;
-
+  bool isLoadingMore = false; // Flag to prevent multiple loads
+  int currentPage = 1; // For pagination in scrobbles
   final List<String> _pages = ["today", "week", "month", "year", "total"];
   int _selectedIndex = 2;
 
+  ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -61,102 +63,108 @@ class _ChartPageState extends State<ChartPage> {
 
     url = widget.box.get("selectedUrl", defaultValue: "");
     _loadCharts();
+
+    if (widget.chartType == "scrobbles") {
+      _scrollController.addListener(_scrollListener);
+    }
   }
 
-  Future<void> _loadCharts() async {
+  Future<void> _loadCharts({bool loadMore = false}) async {
+    if (isLoadingMore) return; // Prevent multiple loads at the same time
+    setState(() {
+      if (!loadMore) {
+        loaded = false;
+        currentPage = 0; // Reset to page 1 when fetching new data
+      }
+      isLoadingMore = true;
+    });
+
     try {
       List<ChartDisplayData> data = [];
-
+      print(currentPage);
       switch (widget.chartType) {
         case 'artist':
           var artists = await ArtistService().fetchArtists(
             _pages[_selectedIndex],
             url,
           );
-          data =
-              artists
-                  .map(
-                    (a) => ChartDisplayData(
-                      id: a.id,
-                      name: a.name,
-                      type: ChartType.ARTIST,
-                      rank: a.rank,
-                      scrobbles: a.scrobbles,
-                      artists: [a.name],
-                    ),
-                  )
-                  .toList();
+          data = artists.map((a) => ChartDisplayData(
+            id: a.id,
+            name: a.name,
+            type: ChartType.ARTIST,
+            rank: a.rank,
+            scrobbles: a.scrobbles,
+            artists: [a.name],
+          )).toList();
           break;
         case 'album':
           var albums = await AlbumService().fetchAlbums(
             _pages[_selectedIndex],
             url,
           );
-          data =
-              albums
-                  .map(
-                    (a) => ChartDisplayData(
-                      id: a.id,
-                      name: a.albumTitle,
-                      type: ChartType.ALBUM,
-                      rank: a.rank,
-                      scrobbles: a.scrobbles,
-                      artists: a.artists,
-                    ),
-                  )
-                  .toList();
+          data = albums.map((a) => ChartDisplayData(
+            id: a.id,
+            name: a.albumTitle,
+            type: ChartType.ALBUM,
+            rank: a.rank,
+            scrobbles: a.scrobbles,
+            artists: a.artists,
+          )).toList();
           break;
         case 'track':
           var tracks = await TrackService().fetchTracks(
             _pages[_selectedIndex],
             url,
           );
-          data =
-              tracks
-                  .map(
-                    (t) => ChartDisplayData(
-                      id: t.id,
-                      name: t.title,
-                      type: ChartType.TRACK,
-                      rank: t.rank,
-                      scrobbles: t.scrobbles,
-                      artists: t.artists,
-                    ),
-                  )
-                  .toList();
+          data = tracks.map((t) => ChartDisplayData(
+            id: t.id,
+            name: t.title,
+            type: ChartType.TRACK,
+            rank: t.rank,
+            scrobbles: t.scrobbles,
+            artists: t.artists,
+          )).toList();
           break;
         case 'scrobbles':
           var scrobbles = await ScrobbleService().fetchScrobbles(
             _pages[_selectedIndex],
             url,
+            page: currentPage,
           );
-          data =
-              scrobbles
-                  .map(
-                    (t) => ChartDisplayData(
-                      id: t.id,
-                      name: t.title,
-                      type: ChartType.TRACK,
-                      rank: t.rank,
-                      scrobbles: t.rank,
-                      artists: t.artists,
-                      timeCreated: t.timeCreated
-                    ),
-                  )
-                  .toList();
+          data = scrobbles.map((t) => ChartDisplayData(
+            id: t.id,
+            name: t.title,
+            type: ChartType.TRACK,
+            rank: t.rank,
+            scrobbles: t.rank,
+            artists: t.artists,
+            timeCreated: t.timeCreated,
+          )).toList();
           break;
         default:
           throw Exception("Unknown chart type: ${widget.chartType}");
       }
 
       setState(() {
-        charts = data;
+        if (!loadMore) {
+          print("reload");
+          charts = data; // If it's a fresh load, reset the list
+          currentPage = 1;
+        } else {
+          print("append");
+          charts.addAll(data); // Append new data if it's a "load more"
+          currentPage++; // Move to the next page for next load
+        }
         loaded = true;
       });
     } catch (e) {
       if (mounted) {
         AppSnackBar(message: e.toString()).build(context);
       }
+    } finally {
+      setState(() {
+        isLoadingMore = false;
+      });
     }
   }
 
@@ -168,20 +176,30 @@ class _ChartPageState extends State<ChartPage> {
     _loadCharts();
   }
 
+  void _scrollListener() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300) {
+      // Trigger loading more data if user scrolls to the bottom
+      if (!isLoadingMore) {
+        _loadCharts(loadMore: true);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar:
-          widget.chartType != "scrobbles"
-              ? MainAppBar(input: 'Top ${widget.chartType.capitalize()}s', box: widget.box,)
-              : MainAppBar(input: 'Recently Played', box: widget.box,),
-      // you can add a small extension for capitalize
+      appBar: widget.chartType != "scrobbles"
+          ? MainAppBar(input: 'Top ${widget.chartType.capitalize()}s', box: widget.box,)
+          : MainAppBar(input: 'Recently Played', box: widget.box,),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _loadCharts, // This is where the refresh action happens
+          onRefresh: () async {
+            await _loadCharts(); // Trigger a full refresh
+          },
           child: CustomScrollView(
+            controller: _scrollController,
             slivers: [
               if (widget.chartType != "scrobbles")
                 SliverToBoxAdapter(
@@ -200,7 +218,7 @@ class _ChartPageState extends State<ChartPage> {
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
                     childCount: charts.length,
-                    (sliverContext, index) {
+                        (sliverContext, index) {
                       return buildChartItem(
                         data: charts[index],
                         isFirst: index == 0,
@@ -214,6 +232,10 @@ class _ChartPageState extends State<ChartPage> {
                       );
                     },
                   ),
+                ),
+              if (isLoadingMore)
+                SliverToBoxAdapter(
+                  child: Center(child: CircularProgressIndicator()),
                 ),
             ],
           ),

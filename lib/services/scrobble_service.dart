@@ -3,11 +3,16 @@ import 'dart:convert';
 
 import 'package:maloja_mobile/services/setup_service.dart';
 
-// TODO ADD AUTO PAGING AND ALL TIME AS DEFAULT
 class ScrobbleService {
-  Future<List<Scrobble>> fetchScrobbles(String s, String baseUrl) async {
+  Future<List<Scrobble>> fetchScrobbles(
+      String s,
+      String baseUrl,
+      {int perPage = 100, int page = 0}
+      ) async {
     try {
-      String filter = "?in=today";
+      String filter = "";
+
+      // Determine the time filter based on the input string
       switch (s) {
         case "week":
           filter = "?in=thisweek";
@@ -21,9 +26,14 @@ class ScrobbleService {
         case "total":
           filter = "";
           break;
+        default:
+          filter = "?in=alltime"; // Default to "all time" if no valid filter is given
+          break;
       }
 
-      final response = await http.get(Uri.parse('$baseUrl/apis/mlj_1/scrobbles$filter'));
+      // Add pagination parameters to the request
+      String paginationParams = '&perpage=$perPage&page=$page';
+      final response = await http.get(Uri.parse('$baseUrl/apis/mlj_1/scrobbles$filter$paginationParams'));
 
       if (response.statusCode == 200) {
         final jsonBody = json.decode(response.body);
@@ -44,8 +54,6 @@ class ScrobbleService {
     }
   }
 }
-
-
 
 class Scrobble {
   final int id;
