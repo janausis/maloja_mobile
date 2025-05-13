@@ -10,30 +10,9 @@ class ScrobbleService {
       {int perPage = 100, int page = 0}
       ) async {
     try {
-      String filter = "";
-
-      // Determine the time filter based on the input string
-      switch (s) {
-        case "week":
-          filter = "?in=thisweek";
-          break;
-        case "month":
-          filter = "?in=thismonth";
-          break;
-        case "year":
-          filter = "?in=thisyear";
-          break;
-        case "total":
-          filter = "";
-          break;
-        default:
-          filter = "?in=alltime"; // Default to "all time" if no valid filter is given
-          break;
-      }
-
       // Add pagination parameters to the request
       String paginationParams = '&perpage=$perPage&page=$page';
-      final response = await http.get(Uri.parse('$baseUrl/apis/mlj_1/scrobbles$filter$paginationParams'));
+      final response = await http.get(Uri.parse('$baseUrl/apis/mlj_1/scrobbles?in=alltime$paginationParams'));
 
       if (response.statusCode == 200) {
         final jsonBody = json.decode(response.body);

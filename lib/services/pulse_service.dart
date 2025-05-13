@@ -4,26 +4,30 @@ import 'dart:convert';
 import 'package:maloja_mobile/services/setup_service.dart';
 
 class PulseService {
-  Future<List<Pulse>> fetchPulse(String s, String baseUrl) async {
+  Future<List<Pulse>> fetchPulse(
+      String s,
+      String baseUrl,
+      {int perPage = 100, int page = 0}
+      ) async {
     try {
       String filter = "";
 
       switch (s) {
         case "weeks":
-          filter = "?trail=1&step=week";
+          filter = "&trail=1&step=week";
           break;
         case "months":
-          filter = "?trail=1&step=month";
+          filter = "&trail=1&step=month";
           break;
         case "years":
-          filter = "?trail=1&step=year";
+          filter = "&trail=1&step=year";
           break;
         default:
-          filter = "?trail=1&step=day";
+          filter = "&trail=1&step=day";
           break;
       }
 
-      final response = await http.get(Uri.parse('$baseUrl/apis/mlj_1/pulse$filter'));
+      final response = await http.get(Uri.parse('$baseUrl/apis/mlj_1/pulse?perpage=$perPage&page=$page$filter'));
 
 
       if (response.statusCode == 200) {

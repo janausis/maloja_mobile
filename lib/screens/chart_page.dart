@@ -46,6 +46,7 @@ class _ChartPageState extends State<ChartPage> {
   late List<ChartDisplayData> charts = [];
   late String url;
 
+  bool hasMorePages = true;
   bool loaded = false;
   bool isLoadingMore = false; // Flag to prevent multiple loads
   int currentPage = 1; // For pagination in scrobbles
@@ -64,15 +65,16 @@ class _ChartPageState extends State<ChartPage> {
     url = widget.box.get("selectedUrl", defaultValue: "");
     _loadCharts();
 
-    if (widget.chartType == "scrobbles") {
-      _scrollController.addListener(_scrollListener);
-    }
+
+    _scrollController.addListener(_scrollListener);
+
   }
 
   Future<void> _loadCharts({bool loadMore = false}) async {
-    if (isLoadingMore) return; // Prevent multiple loads at the same time
+    if (isLoadingMore || (!hasMorePages && loadMore)) return;
     setState(() {
       if (!loadMore) {
+        hasMorePages = true;
         loaded = false;
         currentPage = 0; // Reset to page 1 when fetching new data
       }
@@ -81,12 +83,12 @@ class _ChartPageState extends State<ChartPage> {
 
     try {
       List<ChartDisplayData> data = [];
-      print(currentPage);
       switch (widget.chartType) {
         case 'artist':
           var artists = await ArtistService().fetchArtists(
             _pages[_selectedIndex],
             url,
+            page: currentPage,
           );
           data = artists.map((a) => ChartDisplayData(
             id: a.id,
@@ -101,6 +103,7 @@ class _ChartPageState extends State<ChartPage> {
           var albums = await AlbumService().fetchAlbums(
             _pages[_selectedIndex],
             url,
+            page: currentPage,
           );
           data = albums.map((a) => ChartDisplayData(
             id: a.id,
@@ -115,6 +118,7 @@ class _ChartPageState extends State<ChartPage> {
           var tracks = await TrackService().fetchTracks(
             _pages[_selectedIndex],
             url,
+            page: currentPage,
           );
           data = tracks.map((t) => ChartDisplayData(
             id: t.id,
@@ -147,15 +151,22 @@ class _ChartPageState extends State<ChartPage> {
 
       setState(() {
         if (!loadMore) {
-          print("reload");
+          print("Set");
+          print(currentPage);
           charts = data; // If it's a fresh load, reset the list
           currentPage = 1;
         } else {
-          print("append");
+          print("Add");
+          print(currentPage);
           charts.addAll(data); // Append new data if it's a "load more"
           currentPage++; // Move to the next page for next load
         }
         loaded = true;
+
+        // If empty, stop trying to fetch more pages
+        if (data.isEmpty) {
+          hasMorePages = false;
+        }
       });
     } catch (e) {
       if (mounted) {
@@ -177,11 +188,11 @@ class _ChartPageState extends State<ChartPage> {
   }
 
   void _scrollListener() {
-    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 300) {
-      // Trigger loading more data if user scrolls to the bottom
-      if (!isLoadingMore) {
-        _loadCharts(loadMore: true);
-      }
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 300 &&
+        !isLoadingMore &&
+        hasMorePages) {
+      _loadCharts(loadMore: true);
     }
   }
 

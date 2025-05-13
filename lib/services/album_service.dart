@@ -4,25 +4,29 @@ import 'dart:convert';
 import 'package:maloja_mobile/services/setup_service.dart';
 
 class AlbumService {
-  Future<List<Album>> fetchAlbums(String s, String baseUrl) async {
+  Future<List<Album>> fetchAlbums(
+      String s,
+      String baseUrl,
+      {int perPage = 100, int page = 0}
+      ) async {
     try {
-      String filter = "?in=today";
+      String filter = "&in=today";
       switch (s) {
         case "week":
-          filter = "?in=thisweek";
+          filter = "&in=thisweek";
           break;
         case "month":
-          filter = "?in=thismonth";
+          filter = "&in=thismonth";
           break;
         case "year":
-          filter = "?in=thisyear";
+          filter = "&in=thisyear";
           break;
         case "total":
           filter = "";
           break;
       }
 
-      final response = await http.get(Uri.parse('$baseUrl/apis/mlj_1/charts/albums$filter'));
+      final response = await http.get(Uri.parse('$baseUrl/apis/mlj_1/charts/albums?perpage=$perPage&page=$page$filter'));
 
       if (response.statusCode == 200) {
         final jsonBody = json.decode(response.body);

@@ -23,39 +23,95 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
   late List<Pulse> pulse = [];
   late String url;
 
+  bool hasMorePages = true;
   bool loaded = false;
+  bool isLoadingMore = false;
+  int currentPage = 0;
 
   final List<String> _pages = ["days", "weeks", "months", "years"];
   int _selectedIndex = 2;
+
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
     url = widget.box.get("selectedUrl", defaultValue: "");
     _loadCharts();
+    _scrollController.addListener(_scrollListener);
   }
 
-  Future<void> _loadCharts() async {
-    try {
+  Future<void> _loadCharts({bool loadMore = false}) async {
+    if (isLoadingMore || (!hasMorePages && loadMore)) return;
 
-      var data = await PulseService().fetchPulse(_pages[_selectedIndex], url);
+    setState(() {
+      if (!loadMore) {
+        hasMorePages = true;
+        loaded = false;
+        currentPage = 0;
+      }
+      isLoadingMore = true;
+    });
+
+    try {
+      final data = await PulseService().fetchPulse(
+        _pages[_selectedIndex],
+        url,
+        page: currentPage,
+      );
+
       setState(() {
-        pulse = data;
-        loaded = true;
+        if (loadMore) {
+          print("Add");
+          print(currentPage);
+
+          pulse.addAll(data);
+          currentPage++;
+        } else {
+          print("Set");
+          print(currentPage);
+
+          pulse = data;
+          loaded = true;
+          currentPage = 1;
+        }
+
+        // If empty, stop trying to fetch more pages
+        if (data.isEmpty) {
+          hasMorePages = false;
+        }
       });
     } catch (e) {
       if (mounted) {
         AppSnackBar(message: e.toString()).build(context);
       }
+    } finally {
+      setState(() {
+        isLoadingMore = false;
+      });
     }
   }
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
-      loaded = false;
     });
     _loadCharts();
+  }
+
+  void _scrollListener() {
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 300 &&
+        !isLoadingMore &&
+        hasMorePages) {
+      _loadCharts(loadMore: true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   @override
@@ -66,8 +122,9 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
       appBar: MainAppBar(input: "Pulse", box: widget.box),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _loadCharts, // This is where the refresh action happens
+          onRefresh: () => _loadCharts(),
           child: CustomScrollView(
+            controller: _scrollController,
             slivers: [
               SliverToBoxAdapter(
                 child: TimeframeSelector(
@@ -85,10 +142,25 @@ class _MainPageState extends State<MainPage> with TickerProviderStateMixin {
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
                     childCount: pulse.length,
-                    (sliverContext, index) {
-                      return SmallPulseData(pulse: pulse[index], theme: theme);
+                        (sliverContext, index) {
+                          final isLast = index == pulse.length - 1;
+
+                          return Column(
+                            children: [
+                              SmallPulseData(pulse: pulse[index], theme: theme),
+                              if (isLast) const SizedBox(height: 50),
+                            ],
+                          );
+
                     },
                   ),
+                ),
+              if (isLoadingMore)
+                SliverToBoxAdapter(
+                  child: Center(child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 20),
+                    child: CircularProgressIndicator(),
+                  )),
                 ),
             ],
           ),
